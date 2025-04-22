@@ -1,0 +1,1073 @@
+{
+	"info": {
+		"_postman_id": "e7a9c0e0-5a73-4a28-b75c-f8f3c2a6b5d0",
+		"name": "StreamFlow API",
+		"description": "Colección para probar la API StreamFlow, una plataforma de streaming desarrollada como un monolito modular.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Flujo 1: Registro de Cliente y Acceso a Videos",
+			"description": "Este flujo prueba el registro de un nuevo usuario cliente, inicio de sesión y acceso a videos.",
+			"item": [
+				{
+					"name": "Listar Todos los Videos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('videos');",
+									"    pm.expect(responseJson.videos).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay videos disponibles, guardar el ID del primer video para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.videos && responseJson.videos.length > 0) {",
+									"    pm.environment.set(\"videoId\", responseJson.videos[0].id);",
+									"    console.log(\"ID de video guardado: \" + responseJson.videos[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							]
+						},
+						"description": "Obtiene el listado de todos los videos disponibles en la plataforma."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Usuario Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa (201 Created)",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la información del usuario creado",
+									"pm.test(\"Response has user data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('user');",
+									"    pm.expect(responseJson.user).to.have.property('id');",
+									"    pm.expect(responseJson.user).to.have.property('email');",
+									"    pm.expect(responseJson.user.email).to.eql(pm.environment.get(\"userEmail\"));",
+									"});",
+									"",
+									"// Guardar el ID del usuario para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.user && responseJson.user.id) {",
+									"    pm.environment.set(\"userId\", responseJson.user.id);",
+									"    console.log(\"ID de usuario guardado: \" + responseJson.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar un email aleatorio para evitar conflictos",
+									"const randomEmail = 'user_' + Date.now() + '@example.com';",
+									"pm.environment.set(\"userEmail\", randomEmail);",
+									"pm.environment.set(\"userPassword\", \"Password123!\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Usuario\",\n    \"lastName\": \"Prueba\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"confirmPassword\": \"{{userPassword}}\",\n    \"role\": \"Cliente\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						},
+						"description": "Registra un nuevo usuario con rol 'Cliente' en el sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "Iniciar Sesión como Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT",
+									"pm.test(\"Response has token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"});",
+									"",
+									"// Guardar el token para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"authToken\", responseJson.token);",
+									"    console.log(\"Token de autenticación guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario cliente recién creado."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Video por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga los datos del video",
+									"pm.test(\"Response has video data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('video');",
+									"    pm.expect(responseJson.video).to.have.property('id');",
+									"    pm.expect(responseJson.video.id).to.eql(pm.environment.get(\"videoId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que tenemos un token de autenticación",
+									"const authToken = pm.environment.get(\"authToken\");",
+									"if (!authToken) {",
+									"    console.error(\"No se encontró un token de autenticación. Ejecute primero 'Iniciar Sesión como Cliente'.\");",
+									"}",
+									"",
+									"// Verificar que tenemos un ID de video",
+									"const videoId = pm.environment.get(\"videoId\");",
+									"if (!videoId) {",
+									"    console.error(\"No se encontró un ID de video. Ejecute primero 'Listar Todos los Videos'.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Obtiene los detalles de un video específico utilizando el token de autenticación del usuario cliente."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flujo 2: Administración de Facturas",
+			"description": "Este flujo prueba el inicio de sesión como administrador, la obtención de facturas y la actualización del estado de una factura.",
+			"item": [
+				{
+					"name": "Iniciar Sesión como Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT y que el usuario sea administrador",
+									"pm.test(\"Response has admin token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"    pm.expect(responseJson.user.role).to.eql('Administrador');",
+									"});",
+									"",
+									"// Guardar el token de administrador para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"adminToken\", responseJson.token);",
+									"    console.log(\"Token de administrador guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@streamflow.com\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario administrador utilizando las credenciales por defecto creadas por los seeders."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Todas las Facturas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('facturas');",
+									"    pm.expect(responseJson.facturas).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay facturas disponibles, guardar el ID de una factura pendiente para usarla más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.facturas && responseJson.facturas.length > 0) {",
+									"    // Buscar una factura pendiente",
+									"    const facturasPendientes = responseJson.facturas.filter(factura => factura.estado === 'Pendiente');",
+									"    ",
+									"    if (facturasPendientes.length > 0) {",
+									"        pm.environment.set(\"facturaId\", facturasPendientes[0].id);",
+									"        console.log(\"ID de factura pendiente guardado: \" + facturasPendientes[0].id);",
+									"    } else {",
+									"        // Si no hay facturas pendientes, usar la primera factura disponible",
+									"        pm.environment.set(\"facturaId\", responseJson.facturas[0].id);",
+									"        console.log(\"ID de factura guardado: \" + responseJson.facturas[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que
+
+{
+	"info": {
+		"_postman_id": "e7a9c0e0-5a73-4a28-b75c-f8f3c2a6b5d0",
+		"name": "StreamFlow API",
+		"description": "Colección para probar la API StreamFlow, una plataforma de streaming desarrollada como un monolito modular.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Flujo 1: Registro de Cliente y Acceso a Videos",
+			"description": "Este flujo prueba el registro de un nuevo usuario cliente, inicio de sesión y acceso a videos.",
+			"item": [
+				{
+					"name": "Listar Todos los Videos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('videos');",
+									"    pm.expect(responseJson.videos).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay videos disponibles, guardar el ID del primer video para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.videos && responseJson.videos.length > 0) {",
+									"    pm.environment.set(\"videoId\", responseJson.videos[0].id);",
+									"    console.log(\"ID de video guardado: \" + responseJson.videos[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							]
+						},
+						"description": "Obtiene el listado de todos los videos disponibles en la plataforma."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Usuario Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa (201 Created)",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la información del usuario creado",
+									"pm.test(\"Response has user data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('user');",
+									"    pm.expect(responseJson.user).to.have.property('id');",
+									"    pm.expect(responseJson.user).to.have.property('email');",
+									"    pm.expect(responseJson.user.email).to.eql(pm.environment.get(\"userEmail\"));",
+									"});",
+									"",
+									"// Guardar el ID del usuario para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.user && responseJson.user.id) {",
+									"    pm.environment.set(\"userId\", responseJson.user.id);",
+									"    console.log(\"ID de usuario guardado: \" + responseJson.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar un email aleatorio para evitar conflictos",
+									"const randomEmail = 'user_' + Date.now() + '@example.com';",
+									"pm.environment.set(\"userEmail\", randomEmail);",
+									"pm.environment.set(\"userPassword\", \"Password123!\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Usuario\",\n    \"lastName\": \"Prueba\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"confirmPassword\": \"{{userPassword}}\",\n    \"role\": \"Cliente\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						},
+						"description": "Registra un nuevo usuario con rol 'Cliente' en el sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "Iniciar Sesión como Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT",
+									"pm.test(\"Response has token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"});",
+									"",
+									"// Guardar el token para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"authToken\", responseJson.token);",
+									"    console.log(\"Token de autenticación guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario cliente recién creado."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Video por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga los datos del video",
+									"pm.test(\"Response has video data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('video');",
+									"    pm.expect(responseJson.video).to.have.property('id');",
+									"    pm.expect(responseJson.video.id).to.eql(pm.environment.get(\"videoId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que tenemos un token de autenticación",
+									"const authToken = pm.environment.get(\"authToken\");",
+									"if (!authToken) {",
+									"    console.error(\"No se encontró un token de autenticación. Ejecute primero 'Iniciar Sesión como Cliente'.\");",
+									"}",
+									"",
+									"// Verificar que tenemos un ID de video",
+									"const videoId = pm.environment.get(\"videoId\");",
+									"if (!videoId) {",
+									"    console.error(\"No se encontró un ID de video. Ejecute primero 'Listar Todos los Videos'.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Obtiene los detalles de un video específico utilizando el token de autenticación del usuario cliente."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flujo 2: Administración de Facturas",
+			"description": "Este flujo prueba el inicio de sesión como administrador, la obtención de facturas y la actualización del estado de una factura.",
+			"item": [
+				{
+					"name": "Iniciar Sesión como Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT y que el usuario sea administrador",
+									"pm.test(\"Response has admin token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"    pm.expect(responseJson.user.role).to.eql('Administrador');",
+									"});",
+									"",
+									"// Guardar el token de administrador para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"adminToken\", responseJson.token);",
+									"    console.log(\"Token de administrador guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@streamflow.com\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario administrador utilizando las credenciales por defecto creadas por los seeders."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Todas las Facturas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('facturas');",
+									"    pm.expect(responseJson.facturas).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay facturas disponibles, guardar el ID de una factura pendiente para usarla más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.facturas && responseJson.facturas.length > 0) {",
+									"    // Buscar una factura pendiente",
+									"    const facturasPendientes = responseJson.facturas.filter(factura => factura.estado === 'Pendiente');",
+									"    ",
+									"    if (facturasPendientes.length > 0) {",
+									"        pm.environment.set(\"facturaId\", facturasPendientes[0].id);",
+									"        console.log(\"ID de factura pendiente guardado: \" + facturasPendientes[0].id);",
+									"    } else {",
+									"        // Si no hay facturas pendientes, usar la primera factura disponible",
+									"        pm.environment.set(\"facturaId\", responseJson.facturas[0].id);",
+									"        console.log(\"ID de factura guardado: \" + responseJson.facturas[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que tenemos un token de administrador",
+									"const adminToken
+
+{
+	"info": {
+		"_postman_id": "e7a9c0e0-5a73-4a28-b75c-f8f3c2a6b5d0",
+		"name": "StreamFlow API",
+		"description": "Colección para probar la API StreamFlow, una plataforma de streaming desarrollada como un monolito modular.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Flujo 1: Registro de Cliente y Acceso a Videos",
+			"description": "Este flujo prueba el registro de un nuevo usuario cliente, inicio de sesión y acceso a videos.",
+			"item": [
+				{
+					"name": "Listar Todos los Videos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('videos');",
+									"    pm.expect(responseJson.videos).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay videos disponibles, guardar el ID del primer video para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.videos && responseJson.videos.length > 0) {",
+									"    pm.environment.set(\"videoId\", responseJson.videos[0].id);",
+									"    console.log(\"ID de video guardado: \" + responseJson.videos[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							]
+						},
+						"description": "Obtiene el listado de todos los videos disponibles en la plataforma."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Usuario Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa (201 Created)",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la información del usuario creado",
+									"pm.test(\"Response has user data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('user');",
+									"    pm.expect(responseJson.user).to.have.property('id');",
+									"    pm.expect(responseJson.user).to.have.property('email');",
+									"    pm.expect(responseJson.user.email).to.eql(pm.environment.get(\"userEmail\"));",
+									"});",
+									"",
+									"// Guardar el ID del usuario para usarlo más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.user && responseJson.user.id) {",
+									"    pm.environment.set(\"userId\", responseJson.user.id);",
+									"    console.log(\"ID de usuario guardado: \" + responseJson.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar un email aleatorio para evitar conflictos",
+									"const randomEmail = 'user_' + Date.now() + '@example.com';",
+									"pm.environment.set(\"userEmail\", randomEmail);",
+									"pm.environment.set(\"userPassword\", \"Password123!\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Usuario\",\n    \"lastName\": \"Prueba\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"confirmPassword\": \"{{userPassword}}\",\n    \"role\": \"Cliente\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						},
+						"description": "Registra un nuevo usuario con rol 'Cliente' en el sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "Iniciar Sesión como Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT",
+									"pm.test(\"Response has token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"});",
+									"",
+									"// Guardar el token para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"authToken\", responseJson.token);",
+									"    console.log(\"Token de autenticación guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario cliente recién creado."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Video por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga los datos del video",
+									"pm.test(\"Response has video data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('video');",
+									"    pm.expect(responseJson.video).to.have.property('id');",
+									"    pm.expect(responseJson.video.id).to.eql(pm.environment.get(\"videoId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que tenemos un token de autenticación",
+									"const authToken = pm.environment.get(\"authToken\");",
+									"if (!authToken) {",
+									"    console.error(\"No se encontró un token de autenticación. Ejecute primero 'Iniciar Sesión como Cliente'.\");",
+									"}",
+									"",
+									"// Verificar que tenemos un ID de video",
+									"const videoId = pm.environment.get(\"videoId\");",
+									"if (!videoId) {",
+									"    console.error(\"No se encontró un ID de video. Ejecute primero 'Listar Todos los Videos'.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Obtiene los detalles de un video específico utilizando el token de autenticación del usuario cliente."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flujo 2: Administración de Facturas",
+			"description": "Este flujo prueba el inicio de sesión como administrador, la obtención de facturas y la actualización del estado de una factura.",
+			"item": [
+				{
+					"name": "Iniciar Sesión como Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga el token JWT y que el usuario sea administrador",
+									"pm.test(\"Response has admin token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('token');",
+									"    pm.expect(responseJson.token).to.be.a('string');",
+									"    pm.expect(responseJson.user.role).to.eql('Administrador');",
+									"});",
+									"",
+									"// Guardar el token de administrador para usarlo en solicitudes posteriores",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"adminToken\", responseJson.token);",
+									"    console.log(\"Token de administrador guardado\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@streamflow.com\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con el usuario administrador utilizando las credenciales por defecto creadas por los seeders."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Todas las Facturas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Verificar que la respuesta contenga la estructura esperada",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.eql(true);",
+									"    pm.expect(responseJson).to.have.property('facturas');",
+									"    pm.expect(responseJson.facturas).to.be.an('array');",
+									"});",
+									"",
+									"// Si hay facturas disponibles, guardar el ID de una factura pendiente para usarla más tarde",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.facturas && responseJson.facturas.length > 0) {",
+									"    // Buscar una factura pendiente",
+									"    const facturasPendientes = responseJson.facturas.filter(factura => factura.estado === 'Pendiente');",
+									"    ",
+									"    if (facturasPendientes.length > 0) {",
+									"        pm.environment.set(\"facturaId\", facturasPendientes[0].id);",
+									"        console.log(\"ID de factura pendiente guardado: \" + facturasPendientes[0].id);",
+									"    } else {",
+									"        // Si no hay facturas pendientes, usar la primera factura disponible",
+									"        pm.environment.set(\"facturaId\", responseJson.facturas[0].id);",
+									"        console.log(
+

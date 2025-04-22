@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: streamflow-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Auth Database (PostgreSQL)
+      - key: AUTH_DB_HOST
+        sync: false
+      - key: AUTH_DB_PORT
+        sync: false
+      - key: AUTH_DB_NAME
+        sync: false
+      - key: AUTH_DB_USER
+        sync: false
+      - key: AUTH_DB_PASSWORD
+        sync: false
+      # Users Database (MySQL)
+      - key: USERS_DB_HOST
+        sync: false
+      - key: USERS_DB_PORT
+        sync: false
+      - key: USERS_DB_NAME
+        sync: false
+      - key: USERS_DB_USER
+        sync: false
+      - key: USERS_DB_PASSWORD
+        sync: false
+      # JWT Configuration
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 1h
+      # Other Configuration
+      - key: LOG_LEVEL
+        value: info

@@ -1,0 +1,466 @@
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+TALLER 1 – MONOLITO MODULAR EN PRODUCCIÓN
+Arquitectura de Sistemas
+
+CONTEXTO
+Tras el éxito del proyecto de gestión de estudiantes del semestre pasado, la Corporación
+Nacional del Software (CODELSOFT) ha decidido desarrollar una aplicación para la gestión
+de una plataforma de streaming denominada StreamFlow. Para ello, se enfocará inicialmente
+en implementar la lógica de negocio del sistema, el cual estará basado en una arquitectura de
+monolito modular, que integrará módulos especializados para la gestión de usuarios,
+autenticación, facturación y administración de contenido audiovisual.
+Según el Chief Technology Officer (CTO) de CODELSOFT, la aplicación debe permitir a los
+usuarios crear y administrar sus cuentas, autenticarse de manera segura mediante tokens JWT
+y acceder a un catálogo de videos. Los administradores podrán gestionar el contenido
+audiovisual —realizando operaciones como la subida, actualización y eliminación de
+videos—, así como administrar las suscripciones y pagos de los usuarios.
+Esta etapa inicial se centrará únicamente en el back-end y la lógica de negocio, considerando
+que se prevé un uso limitado de la aplicación en un entorno con pocos usuarios. No obstante,
+CODELSOFT ha proporcionado su logo corporativo (Figura 1) para que los desarrolladores
+puedan familiarizarse con la identidad de la organización.
+
+Figura 1: Logo ficticio de la empresa CODELSOFT.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+ÍNDICE
+CONTEXTO............................................................................................................................. 1
+DESCRIPCIÓN TÉCNICA.................................................................................................... 3
+RESPONSABILIDADES DE LOS MÓDULOS................................................................... 4
+MÓDULO DE USUARIOS................................................................................................. 4
+Crear usuario (POST /usuarios)..................................................................................... 4
+Obtener usuario por ID (GET /usuarios/{id})................................................................4
+Actualizar usuario (PATCH /usuarios/{id})................................................................... 5
+Eliminar usuario (DELETE /usuarios/{id})...................................................................5
+Listar todos los usuarios (GET /usuarios)...................................................................... 5
+MÓDULO DE AUTENTICACIÓN.................................................................................... 6
+Iniciar sesión (POST /auth/login)...................................................................................6
+Actualizar contraseña (PATCH /auth/usuarios/{id})......................................................6
+MÓDULO DE FACTURACIÓN.........................................................................................7
+Crear factura (POST /facturas).......................................................................................7
+Obtener factura por ID (GET /facturas/{id})................................................................. 7
+Actualizar estado de factura (PATCH /facturas/{id}).................................................... 7
+Eliminar factura (DELETE /facturas/{id}).................................................................... 8
+Listar facturas por usuario (GET /facturas)....................................................................8
+MÓDULO DE VIDEOS...................................................................................................... 9
+Subir vídeo (POST /videos)........................................................................................... 9
+Obtener video por ID (GET /videos/{id})......................................................................9
+Actualizar video (PATCH /videos/{id}).........................................................................9
+Eliminar video (DELETE /videos/{id}).........................................................................9
+Listar todos los videos (GET /videos)..........................................................................10
+SEEDER.................................................................................................................................. 10
+DESPLIEGUE........................................................................................................................ 11
+INFORME...............................................................................................................................12
+POSTMAN.............................................................................................................................. 13
+}COMPOSICIÓN DE PAREJAS..........................................................................................14
+ENTREGA.............................................................................................................................. 15
+RÚBRICA............................................................................................................................... 17
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+DESCRIPCIÓN TÉCNICA
+La aplicación se dividirá en cuatro módulos que se encargaran de manejar el contenido
+asociado a estos, cada módulo tendrá su propia base de datos independiente. Los módulos con
+los que contará la aplicación son los siguientes:
+1.​ Autenticación: Control de la autenticación, permitirá a los usuarios autenticarse de
+manera segura en la aplicación. El módulo de autenticación utilizará una base de datos
+PostgreSQL.
+2.​ Facturación: Manejo de pagos, permitirá a los administradores gestionar los pagos de
+los clientes en el sistema. El módulo de facturación utilizará una base de datos
+MariaDB.
+3.​ Videos: Administración del contenido audiovisual, permitirá a los clientes acceder al
+contenido audiovisual, y a los administradores gestionarlo. El módulo de videos
+utilizará una base de datos MongoDB.
+4.​ Usuarios: Gestión de cuentas, permitirá a los clientes registrarse en la aplicación y a
+los administradores gestionar a estos. El módulo de usuarios utilizará una base de
+datos a libre elección, que no sea PostgreSQL.
+CODELSOFT no posee ninguna restricción respecto a los Frameworks que se utilicen en la
+aplicación.
+Por lo anterior mencionado, es necesario que el Stack tecnológico que se para el desarrollo de
+la aplicación, sea compatible con el protocolo HTTP (para comunicación externa) y posea el
+SDK para consultar la base de datos asignada, así como el necesario para consumir la base de
+datos en ambientes productivos (Ver Sección Despliegue).
+Para dividir el trabajo de forma equitativa, el equipo deberá decidir quién será identificado
+como desarrollador “A” y “B”, una vez realizado, se deberá cumplir obligatoriamente las
+responsabilidades indicadas para el desarrollador en el taller.
+Nota: La base de datos libre puede ser decidida entre los miembros del equipo, como se
+mencionó en la descripción de los módulos, esta base de datos no puede ser PostgreSQL.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+RESPONSABILIDADES DE LOS MÓDULOS
+MÓDULO DE USUARIOS
+Maneja la creación y gestión de cuentas de usuario, debe incluir endpoints para las siguientes
+operaciones:
+1.​ Crear usuario.
+2.​ Obtener usuario por ID.
+3.​ Actualizar usuario.
+4.​ Eliminar usuario.
+5.​ Listar todos los usuarios.
+Crear usuario (POST /usuarios)
+Registrar un usuario nuevo en el sistema, se debe ingresar: Nombre, apellido, correo
+electrónico, contraseña, confirmación de contraseña y rol. La respuesta a la petición debe
+incluir los datos del usuario.
+Requerimientos adicionales:
+●​ La contraseña debe almacenarse utilizando hashing.
+●​ La contraseña y confirmación de contraseña deben ser iguales.
+●​ La respuesta del módulo debe incluir todos los datos del usuario, excepto el hash de la
+contraseña.
+●​ El correo electrónico debe ser único en el sistema.
+●​ Los roles solo pueden ser “Administrador” y “Cliente”
+●​ Para registrar a un usuario con rol Administrador, el usuario que realiza la acción debe
+haber iniciado sesión y tener el rol de “Administrador”.
+Obtener usuario por ID (GET /usuarios/{id})
+Permite obtener los datos de un usuario por su ID. La respuesta debe contener: ID del
+usuario, nombre, apellido, correo electrónico, rol y fecha de registro del usuario. La respuesta
+a la petición debe incluir los datos del usuario.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ La respuesta debe excluir la contraseña.
+●​ Solo los administradores pueden solicitar los datos de otros usuarios.
+●​ El usuario que realiza la petición puede solicitar sus datos.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+Actualizar usuario (PATCH /usuarios/{id})
+Permite actualizar los datos de un usuario existente. Se pueden actualizar los siguientes
+campos del usuario: Nombre, apellido y correo electrónico. La respuesta a la petición debe
+incluir los datos del usuario.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ La respuesta debe excluir la contraseña.
+●​ Si se intenta modificar la contraseña, la aplicación debe entregar un mensaje
+indicando que no se puede modificar la contraseña aquí.
+Eliminar usuario (DELETE /usuarios/{id})
+Permite a un usuario con rol de administrador, eliminar un usuario del sistema.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Se debe realizar un soft delete del usuario.
+●​ Solo los administradores pueden eliminar usuarios.
+●​ La respuesta debe de estar vacía.
+Listar todos los usuarios (GET /usuarios)
+Obtiene la lista de todos los usuarios registrados en el sistema. La respuesta debe contener un
+listado de los usuarios y por cada uno incluir: ID del usuario, nombre, apellido, correo
+electrónico, rol y fecha de registro del usuario.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ No se deben incluir contraseñas ni hashes en la respuesta.
+●​ Se debe poder buscar por correo electrónico, nombre y apellido utilizando query
+params, uno para correo electrónico y otro para nombre y apellido. La búsqueda debe
+ser flexible: Si se ingresa un valor parcial, el sistema debe devolver todos los
+resultados que lo contengan.
+●​ Solo los administradores pueden acceder al listado de todos los usuarios.
+●​ No se deben mostrar los usuarios eliminados.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+MÓDULO DE AUTENTICACIÓN
+Maneja la autenticación y cambio de contraseña de los usuarios, debe incluir endpoints para
+las siguientes operaciones:
+1.​ Iniciar sesión.
+2.​ Actualizar contraseña.
+Iniciar sesión (POST /auth/login)
+Permite a un usuario autenticarse en el sistema mediante su correo electrónico y contraseña.
+Requerimientos adicionales:
+●​ Si las credenciales son correctas, el sistema debe generar y devolver un token JWT
+para la autenticación del usuario.
+●​ La respuesta del módulo debe incluir todos los datos del usuario, excepto la
+contraseña.
+●​ Si el usuario ha sido eliminado, debe rechazarse el inicio de sesión.
+Actualizar contraseña (PATCH /auth/usuarios/{id})
+Permite actualizar la contraseña de un usuario. Para actualizar la contraseña se debe solicitar:
+Contraseña actual, nueva contraseña y confirmación de nueva contraseña.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ La respuesta no debe incluir la contraseña.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+MÓDULO DE FACTURACIÓN
+Se encarga de la gestión de pagos y suscripciones, debe incluir endpoints para las siguientes
+operaciones:
+1.​ Crear factura
+2.​ Obtener factura por ID
+3.​ Actualizar estado de factura
+4.​ Eliminar factura
+5.​ Listar facturas por usuario
+
+Crear factura (POST /facturas)
+Registra una nueva factura para un usuario en el sistema, se debe ingresar: ID del usuario,
+estado de la factura y Monto a pagar.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores pueden crear facturas.
+●​ El monto debe ser un número entero positivo.
+●​ Los estados de las facturas pueden ser “Pendiente”, “Pagado” y “Vencido”.
+●​ La respuesta debe incluir todos los datos de la factura registrada y la fecha de emisión
+de la factura, que es la fecha en la que se registró la factura en la aplicación.
+Obtener factura por ID (GET /facturas/{id})
+Obtiene los datos de una factura específica. La respuesta debe incluir: ID de la factura, estado
+de la factura, ID de usuario asociado a la factura, monto a pagar, fecha de emisión de la
+factura y fecha de pago de la factura.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores y el cliente dueño de la factura pueden consultarla.
+Actualizar estado de factura (PATCH /facturas/{id})
+Permite actualizar el estado de una factura. Los campos que se pueden actualizar: Estado de
+la factura.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores pueden actualizar facturas.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+●​ Si se actualiza el estado de la factura a “Pagado”, se debe registrar la fecha de pago
+como la fecha en la que se realiza la actualización.
+Eliminar factura (DELETE /facturas/{id})
+Permite eliminar una factura del sistema.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solamente los administradores pueden eliminar facturas.
+●​ Se debe realizar un soft delete de la factura.
+●​ No se puede eliminar una factura en estado pagado.
+Listar facturas por usuario (GET /facturas)
+Obtiene todas las facturas. La respuesta debe contener un listado de las facturas y por cada
+una incluir: ID de la factura, estado de la factura, ID de usuario asociado a la factura, monto a
+pagar, fecha de emisión de la factura y fecha de pago de la factura.
+Requerimientos adicionales:
+●​ Se debe permitir filtrar por estado de factura utilizando query params.
+●​ El usuario debe haber iniciado sesión.
+●​ Un administrador puede ver las facturas de cualquier usuario, un cliente recibe
+únicamente sus facturas.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+MÓDULO DE VIDEOS
+Administra el contenido audiovisual disponible en la plataforma, debe incluir endpoints para
+las siguientes operaciones:
+1.​ Subir
+2.​ Obtener video por ID
+3.​ Actualizar video
+4.​ Eliminar video
+5.​ Listar todos los videos
+
+Subir vídeo (POST /videos)
+Registra un nuevo vídeo en el sistema, se deben ingresar: título, descripción y género.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores pueden subir videos.
+●​ La respuesta debe incluir todos los datos del video registrado.
+Obtener video por ID (GET /videos/{id})
+Obtiene los detalles de un video específico. La respuesta debe incluir: ID del video, título,
+descripción y género del video.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+Actualizar video (PATCH /videos/{id})
+Permite actualizar la información de un video existente. Se pueden actualizar los siguientes
+campos del video: Título, descripción y género.
+Requerimientos adicionales:
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores pueden realizar modificaciones
+●​ La respuesta debe incluir todos los datos actualizados del
+Eliminar video (DELETE /videos/{id})
+Permite eliminar un video del sistema.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+Requerimientos adicionales:
+●​ Se debe realizar un soft delete del video.
+●​ El usuario debe haber iniciado sesión.
+●​ Solo los administradores pueden eliminar videos.
+●​ La respuesta debe estar vacía.
+Listar todos los videos (GET /videos)
+Obtiene la lista de todos los videos disponibles en la plataforma.
+Requerimientos adicionales:
+●​ Se debe permitir la búsqueda por título y género utilizando query params. Si se
+ingresa un valor parcial, el sistema debe devolver todos los resultados que lo
+contengan.
+●​ No deben incluirse videos eliminados.
+Las responsabilidades para el desarrollador “A” y “B” serán divididas de la siguiente manera:
+-​ Desarrollador “A” tomará el módulo de autenticación.
+-​ Desarrollador “A” tomará el módulo de usuarios.
+-​ Desarrollador “B” tomará el módulo de videos.
+-​ Desarrollador “B” tomará el módulo de facturas.
+Nota: El integrante que desarrolle el módulo de autenticación debe realizar todo lo
+relacionado con esta, no solamente los endpoints.
+
+SEEDER
+La aplicación debe incluir un script seeder o endpoint que automatice el llenado de la base de
+datos con datos de prueba. En concreto, se deben generar:
+●​ Entre 100 y 200 usuarios.
+●​ Entre 300 y 400 facturas.
+●​ Entre 400 y 600 videos.
+Nota: En el README.md del repositorio debe indicarse como ejecutar el seeder de la
+aplicación.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+DESPLIEGUE
+Uno de los requisitos fundamentales de CODELSOFT es poder visualizar, sin necesidad de
+un entorno de desarrollo altamente preparado, la aplicación funcionando. Es por ello por lo
+que se deberá desplegar la aplicación en un servidor independiente, así como las bases de
+datos.
+Se sugiere utilizar servicios gratuitos para ello, aunque dependiendo de la tecnología, puede
+variar el proveedor. En reglas generales se sugiere:
+-​ Para la aplicación, utilizar Render.
+-​ Para PostgreSQL, utilizar Supabase.
+-​ Para MongoDB, utilizar Mongo Atlas.
+-​ Para MariaDB, utilizar Filess.
+Las responsabilidades para el desarrollador “A” y “B” serán divididas de la siguiente manera:
+-​ Desarrollador “A” desplegará la base de datos del módulo de autenticación.
+-​ Desarrollador “A” desplegará la base de datos del módulo de usuarios.
+-​ Desarrollador “B” desplegará la base de datos del módulo de videos.
+-​ Desarrollador “B” desplegará la base de datos del módulo de facturas.
+Nota: Dado que el enfoque del curso no es aprender un nuevo Framework de Back-End, sino
+las arquitecturas de los sistemas, en caso de que ningún integrante del equipo maneje una
+herramienta que soporte los SDK necesario, contactarse con el ayudante Matías Fontecilla
+(matias.fontecilla@alumnos.ucn.cl).
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+INFORME
+Se debe crear un informe que contenga una portada que incluya, el logo de la universidad,
+fecha de entrega del informe, asignatura e integrantes del equipo, un índice y lo indicado a
+continuación según el contexto indicado en el taller, todos los puntos a continuación
+(excepto los Modelos ER) deben ser fundamentados:
+1.​ Modelos ER (Entidad Relación) de cada base de datos realizado en DBDiagram.
+2.​ ¿Por qué crees que se eligió la arquitectura de monolito modular?
+a.​ ¿Existen otras opciones de arquitectura, enseñadas en el curso, que podrían
+aplicarse en el contexto del taller?
+b.​ ¿Consideran que la arquitectura de monolito modular fue la elección correcta
+para el taller?
+3.​ Beneficios de la arquitectura utilizada.
+4.​ ¿Qué base de datos se eligió para el módulo de usuarios y cuál fue la razón detrás de
+esta elección? (Puedes fundamentar tu respuesta en base a su experiencia u otros
+criterios).
+5.​ Si tuvieran que cambiar la arquitectura de monolito modular a SOA (Service Oriented
+Architecture), ¿En qué servicios separarían los módulos?
+6.​ Si la arquitectura del taller estuviera basada en SOA (Service Oriented Architecture),
+¿Cómo implementarían un nuevo módulo o servicio dedicado exclusivamente a
+recomendaciones?
+a.​ Puede crear mayor contexto para este punto, siempre y cuando no contradiga
+el del taller y sea indicado.
+Contenido extra del informe, no forma parte de la rúbrica, pero entregará 0,3 décimas en la
+nota final del taller si se fundamentan correctamente:
+7.​ Posibles mejoras para la arquitectura indicada.
+El informe debe cumplir con el siguiente formato:
+-​ Texto justificado.
+-​ Times New Roman 12.
+Notas:
+-​ El informe debe ser desarrollado por ambos desarrolladores, “A” y “B” en conjunto.
+-​ Si alguno de los puntos del informe no incluye una fundamentación (a excepción del
+modelo ER de las bases de datos), ese punto será evaluado con puntaje 0.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+POSTMAN
+Para cada módulo deberán realizar colecciones de postman para probar flujos que un usuario
+realizaría normalmente. Cada uno de estos deberá además incorporar pre y post scripts para
+poder obtener y establecer variables de entorno para poder ser utilizadas durante el flujo.
+Los flujos que se espera que realicen los usuarios son los siguientes:
+1.​ Obtener el listado de todos los videos, registrar un nuevo usuario de rol cliente, iniciar
+sesión con el usuario creado y obtener un único vídeo por su ID.
+2.​ Iniciar sesión con usuario administrador, obtener todas las facturas y marcar una
+factura como pagada.
+3.​ Iniciar sesión como usuario administrador, obtener todos los usuarios y eliminar un
+usuario.
+4.​ Iniciar sesión como usuario cliente y cambiar la contraseña.
+El/la Desarrollador “A” tiene asignado los flujos 1 y 2, mientras que el/la Desarrollador “B”
+los flujos 3 y 4.
+Además, dentro del repositorio, junto a las colecciones de los flujos, la colección de postman
+debe incluir todos los endpoints de la aplicación.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+COMPOSICIÓN DE PAREJAS
+El curso Arquitectura de Sistemas se encuentra compuesto por 12 estudiantes, por lo que sé
+requiere la creación de 6 parejas.
+TAREAS POR INTEGRANTE
+Cada integrante de la pareja será responsable de las tareas asignadas que tenga, según el rol
+que elija, desarrollador “A” o “B”. Estará encargado desde la concepción y desarrollo de este,
+hasta su despliegue y correcto funcionamiento en la nube. Se le evaluará el desarrollo de su
+módulo en base a los commits del repositorio.
+INSCRIPCIÓN PAREJAS
+Las parejas designarán a un representante, el cual debe enviar un correo a más tardar el
+23/03/2025 - 23:59 al profesor, con copia al ayudante, de los integrantes: El nombre,
+apellidos, RUT y el desarrollador que tomará cada integrante.
+Una vez se reciba una respuesta al correo de inscripción, estará autorizada y conformada la
+pareja para entregar el taller.
+
+BÚSQUEDA DE PAREJA
+Aquellos/as estudiantes que no logren conformar una pareja, deberán comunicarse con el
+profesor, con copia al ayudante, a más tardar el 23/03/2025 - 23:59, explicando el motivo o
+complicación.
+Aquellos/as estudiantes que no posean equipo pasado el plazo, serán sancionados con 10
+décimas de su nota de taller 1 y posteriormente asignados a algún equipo.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+ENTREGA
+Se debe entregar mediante Campus Virtual UCN un archivo de .zip o .rar que contenga:
+1.​ Archivo texto o PDF con el enlace al repositorio, el enlace a la aplicación desplegará
+y el listado de con los nombres, apellidos y RUT de cada integrante de la pareja.
+a.​ El repositorio debe ser configurado con visibilidad pública. Se sugiere trabajar
+con visibilidad privada y posterior a la entrega actualizar. Considere que se
+tiene un plazo de hasta 1 hora pasado el límite de entrega para realizar este
+cambio.
+2.​ Archivo PDF con las respuestas a las preguntas mencionadas en el apartado de
+INFORME.
+El nombre del .zip o .rar debe estar compuesto por los apellidos de los integrantes de la
+pareja, seguido de “-TALLER1”, por ejemplo “ALARCON-FONTECILLA-TALLER1.rar”
+Fecha límite de entrega: 22/04/2025 - 23:59 hrs.
+DESCUENTOS Y CONSIDERACIONES
+Los descuentos serán aplicados conforme se cumplan con las faltas que se mencionan en este
+apartado.
+Se describe la falta y la cantidad de décimas que descuenta de la nota:
+●​ Los descuentos por atrasos se encuentran descritos como:
+○​ Entrega entre las 00:00 y 00:59 - 10 décimas.
+○​ Entrega entre las 01:00 y 01:59 - 20 décimas.
+○​ Entrega entre las 02:00 y 02:59 - 30 décimas.
+○​ Entrega entre las 03:00 y 03:59 - 40 décimas.
+○​ Entrega entre las 04:00 y 04:59 - 50 décimas.
+○​ Entrega pasado las 05:00 am será calificada con nota mínima.
+●​ No entregar un archivo de extensión .txt o .pdf (texto o PDF) con el repositorio y el
+enlace a la aplicación - 10 décimas.
+●​ No se entrega el informe nota mínima.
+●​ Usar PostgreSQL como base de datos para el módulo de usuarios nota máxima 4.0.
+●​ No incluir nombres, apellidos y RUT de todos los integrantes en la entrega - 10
+décimas.
+●​ No configurar visibilidad pública de los repositorios a más tardar 1 hora después de la
+entrega - 10 décimas.
+●​ No se levanta la aplicación siguiendo los pasos del README.md del repositorio nota
+mínima.
+●​ No se entrega colección de postman con todos los endpoints -30 décimas.
+●​ No se cuenta con un seeder o no se indica cómo se debe ejecutar en el readme.md -30
+décimas.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+Nota: Atraso considera tanto la entrega de los enlaces al repositorio en la nube, cómo
+commits o cambios en el repositorio. Es decir: Si se sube en el periodo la entrega a campus,
+pero se realizan commits fuera del plazo, se aplicarán igualmente las sanciones.
+
+Universidad Católica del Norte
+Facultad de Ingeniería y Ciencias Geológicas
+Departamento de Ingeniería de Sistemas y Computación
+RÚBRICA
+La rúbrica será publicada a más tardar el 25/03/2025.
+
+
