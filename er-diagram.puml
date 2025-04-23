@@ -1,0 +1,61 @@
+@startuml
+' Set up the styling
+skinparam monochrome true
+skinparam linetype ortho
+hide empty methods
+
+' Database notes
+note "Authentication Database\nPostgreSQL" as AuthDB
+note "Users Database\nMySQL" as UsersDB
+
+' Define the auth_users table
+entity "auth_users" {
+  + id : UUID <<PK>>
+  --
+  * email : String <<unique>>
+  * passwordHash : String
+  * role : String <<enum>>
+  lastLogin : DateTime
+  * isActive : Boolean
+  * createdAt : DateTime
+  * updatedAt : DateTime
+  --
+  <<Indexes>>
+  auth_users_email_idx
+  auth_users_role_idx
+}
+
+' Define the users table
+entity "users" {
+  + id : UUID <<PK>>
+  --
+  * firstName : String
+  * lastName : String
+  * email : String <<unique>>
+  * passwordHash : String
+  * role : String <<enum>>
+  * isDeleted : Boolean
+  * createdAt : DateTime
+  * updatedAt : DateTime
+  --
+  <<Indexes>>
+  users_email_idx
+  users_name_idx
+  users_role_idx
+  users_deleted_idx
+}
+
+' Place database notes
+AuthDB .. auth_users
+UsersDB .. users
+
+' Show the relationship between tables
+auth_users "1" -- "1" users : "Same User\n(Cross-Database)"
+
+' Add role enum note
+note "Role Values:\n* Administrador\n* Cliente" as RoleNote
+RoleNote .. auth_users
+RoleNote .. users
+
+@enduml
+

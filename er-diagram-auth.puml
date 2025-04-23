@@ -1,0 +1,32 @@
+@startuml
+' Set up the styling
+skinparam monochrome true
+skinparam linetype ortho
+hide empty methods
+
+title Authentication Database (PostgreSQL)
+
+entity "auth_users" {
+  + id : UUID <<PK>>
+  --
+  * email : String <<unique>>
+  * passwordHash : String
+  * role : String <<enum>>
+  lastLogin : DateTime
+  * isActive : Boolean
+  * createdAt : DateTime
+  * updatedAt : DateTime
+  --
+  <<Indexes>>
+  auth_users_email_idx
+  auth_users_role_idx
+}
+
+note bottom of auth_users
+Role Values:
+* Administrador
+* Cliente
+end note
+
+@enduml
+

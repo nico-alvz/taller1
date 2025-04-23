@@ -1,0 +1,35 @@
+@startuml
+' Set up the styling
+skinparam monochrome true
+skinparam linetype ortho
+hide empty methods
+
+title Users Database (MySQL)
+
+entity "users" {
+  + id : UUID <<PK>>
+  --
+  * firstName : String
+  * lastName : String
+  * email : String <<unique>>
+  * passwordHash : String
+  * role : String <<enum>>
+  * isDeleted : Boolean
+  * createdAt : DateTime
+  * updatedAt : DateTime
+  --
+  <<Indexes>>
+  users_email_idx
+  users_name_idx
+  users_role_idx
+  users_deleted_idx
+}
+
+note bottom of users
+Role Values:
+* Administrador
+* Cliente
+end note
+
+@enduml
+

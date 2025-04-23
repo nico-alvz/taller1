@@ -5,7 +5,6 @@ API monolítica modular para la plataforma de streaming StreamFlow, desarrollada
 ## Requisitos
 
 - Node.js v18.x o superior
-- Docker y Docker Compose
 - PostgreSQL (módulo de autenticación)
 - MySQL (módulo de usuarios)
 
@@ -13,20 +12,40 @@ API monolítica modular para la plataforma de streaming StreamFlow, desarrollada
 
 1. **Clonar el repositorio e instalar dependencias**:
    ```bash
-   git clone [url-repositorio]
-   cd streamflow-api
+   git clone https://github.com/nico-alvz/taller1.git
+   cd taller1
    npm install
    ```
 
-2. **Configurar variables de entorno**:
+2. **Configurar bases de datos**:
+   - Crear una base de datos PostgreSQL para el módulo de autenticación
+   - Crear una base de datos MySQL para el módulo de usuarios
+
+3. **Configurar variables de entorno**:
    ```bash
    cp .env.example .env
-   # Editar .env con las credenciales necesarias
    ```
+   Edita el archivo `.env` con la siguiente información:
+   ```
+   # PostgreSQL (Auth DB)
+   AUTH_DB_HOST=localhost
+   AUTH_DB_PORT=5432
+   AUTH_DB_NAME=auth_db
+   AUTH_DB_USER=postgres
+   AUTH_DB_PASSWORD=tu_contraseña
 
-3. **Iniciar bases de datos con Docker**:
-   ```bash
-   docker-compose up -d
+   # MySQL (Users DB)
+   USERS_DB_HOST=localhost
+   USERS_DB_PORT=3306
+   USERS_DB_NAME=users_db
+   USERS_DB_USER=root
+   USERS_DB_PASSWORD=tu_contraseña
+
+   # Configuración del servidor
+   PORT=3000
+   NODE_ENV=development
+   JWT_SECRET=tu_clave_secreta
+   JWT_EXPIRES=24h
    ```
 
 4. **Verificar conexiones a bases de datos**:
@@ -52,11 +71,6 @@ npm run dev
 npm start
 ```
 
-
-# Verificar conexiones a bases de datos
-npm run test:db
-```
-
 ## Estructura del Proyecto
 
 ```
@@ -64,14 +78,23 @@ npm run test:db
 ├── src/
 │   ├── config/         # Configuración de bases de datos
 │   ├── controllers/    # Lógica de negocio
-│   ├── models/        # Modelos de datos
-│   ├── routes/        # Definición de rutas
-│   ├── utils/         # Middlewares y utilidades
-│   └── server.js      # Punto de entrada
-├── tests/             # Pruebas automatizadas
-├── docker-compose.yml # Configuración de Docker
-└── .env.example      # Plantilla de variables de entorno
+│   ├── models/         # Modelos de datos
+│   ├── routes/         # Definición de rutas
+│   ├── utils/          # Middlewares y utilidades
+│   └── server.js       # Punto de entrada
+├── tests/              # Pruebas automatizadas
+└── .env.example        # Plantilla de variables de entorno
 ```
+
+## Diagramas ER
+
+El proyecto utiliza dos bases de datos separadas:
+
+### Base de Datos de Autenticación (PostgreSQL)
+![Diagrama ER Auth](./er-diagram-auth.png)
+
+### Base de Datos de Usuarios (MySQL)
+![Diagrama ER Users](./er-diagram-users.png)
 
 ## Endpoints
 
@@ -99,22 +122,3 @@ npm run test:db
 **Administrador**:
 - Email: admin@streamflow.com
 - Password: Admin123!
-
-## Tests Automatizados
-
-El proyecto incluye un script de pruebas automatizadas que verifica todos los endpoints de los módulos de Autenticación y Usuarios. Para ejecutar las pruebas:
-
-1. Asegúrate de que el servidor esté corriendo
-2. Ejecuta el script de pruebas:
-   ```bash
-   ./tests/api_test.sh
-   ```
-
-El script probará:
-- Autenticación: login, cambio de contraseña
-- Usuarios: creación, lectura, actualización y eliminación
-- Validación de roles y permisos
-- Manejo de errores
-
-Los resultados se mostrarán en la consola con indicadores visuales de éxito/fallo.
-
